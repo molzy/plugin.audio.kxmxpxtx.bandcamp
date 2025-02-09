@@ -17,7 +17,17 @@ from html.parser import HTMLParser
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.3'
 
 def urlopen_ua(url, data=None):
-    return urlopen(Request(url, data=data, headers={'User-Agent': USER_AGENT}), timeout=5)
+    return urlopen(
+        Request(
+            url,
+            data=data,
+            headers={
+                "User-Agent": USER_AGENT,
+                "Content-Type": "application/json; charset=UTF-8"
+            }
+        ),
+        timeout=15
+    )
 
 def req(url, data=None):
     body = data.encode() if data else None
@@ -239,8 +249,16 @@ class Bandcamp:
     def search(self, query):
         if PY2:
             query = query.decode('utf-8')
-        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=quote_plus(query))
-        request = req(url)
+        url = "https://bandcamp.com/api/bcsearch_public_api/1/autocomplete_elastic"
+        request = req(
+            url,
+            data=json.dumps({
+                "search_text": query,
+                "search_filter": "",
+                "full_page": False,
+                "fan_id": None
+            }),
+        )
         results = json.loads(request)['auto']['results']
         items = []
         for result in results:
